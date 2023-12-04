@@ -16,11 +16,11 @@
 ### How to use:
 
 - Clone the repository.
-- Run the send_mail.py file on the computer that you want to use to send commands. The email subject will be the command as the features section describes.
-- Run the MailChecker.py file on the computer that you want to use to receive commands.
+- Run the `MailChecker.py` file on the computer that you want to use to receive commands.
+- Send the command to mangmaytinhremotecontrol@gmail.com via your own email. The email subject will be the command as the **features section** describes. Format doesn't matter, it will all be set to lowercase.
 
 ### Requirements:
 
-- Python 3.6 or above
+- Python 3.6 or above.
 - Only run on Windows
-- Install required packages using `pip install -r requirements.txt`
+- Install required packa.ges using `pip install -r requirements.txt`.
