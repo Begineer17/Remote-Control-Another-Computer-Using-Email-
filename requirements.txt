@@ -18,3 +18,5 @@ pytweening==1.0.7
 secure-imaplib==0.1.2
 secure-smtplib==0.1.1
 six==1.16.0
+tkinter==1.0
+json==1.0 
